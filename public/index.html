@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail Sender</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        form { max-width: 400px; margin: auto; display: flex; flex-direction: column; gap: 10px; }
+        input, textarea, button { padding: 10px; font-size: 16px; }
+        button { background-color: blue; color: white; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function MailSender() {
+            const [formData, setFormData] = React.useState({
+                to: "",
+                subject: "",
+                text: ""
+            });
+            const [message, setMessage] = React.useState("");
+
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setMessage("Sending...");
+
+                try {
+                    const response = await fetch("/send-mail", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(formData),
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        setMessage("Email sent successfully!");
+                    } else {
+                        setMessage("Error: " + result.error);
+                    }
+                } catch (error) {
+                    setMessage("Failed to send email.");
+                }
+            };
+
+            return (
+                <div>
+                    <h2>Send Email</h2>
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="email"
+                            name="to"
+                            placeholder="Recipient Email"
+                            value={formData.to}
+                            onChange={handleChange}
+                            required
+                        />
+                        <input
+                            type="text"
+                            name="subject"
+                            placeholder="Subject"
+                            value={formData.subject}
+                            onChange={handleChange}
+                            required
+                        />
+                        <textarea
+                            name="text"
+                            placeholder="Message"
+                            value={formData.text}
+                            onChange={handleChange}
+                            required
+                        ></textarea>
+                        <button type="submit">Send Mail</button>
+                    </form>
+                    {message && <p className={message.includes("Error") ? "error" : "success"}>{message}</p>}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<MailSender />);
+    </script>
+
+</body>
+</html>
